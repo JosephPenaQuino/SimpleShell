@@ -20,6 +20,21 @@
 #define MAX_ARGS  100
 #define MAX_ARG_LENGTH 100
 
+#define SET_BIN_LENGTH 8
+#define SET_USR_LENGTH 2
+/* ----------------- Global Variables ----------------- */
+char * allowed_commands_set_bin[SET_BIN_LENGTH]={	"ls", 
+																									"pwd", 
+																									"cd", 
+																									"mkdir", 
+																									"rm", 
+																									"nano", 
+																									"cat", 
+																									"exit"};
+
+char * allowed_commands_set_usr[SET_USR_LENGTH]={	"vim", 
+																									"gcc"};
+
 /* --------------------- Structs ---------------------- */
 struct Data
 {
@@ -30,14 +45,15 @@ struct Data
 
 /* --------------- Function Prototypes --------------- */
 void split_input(struct Data *data );
-bool is_a_command(char *command);
-void execute_command(struct Data *data);
+int is_a_command(char *command);
+void execute_command(struct Data *data, int set);
 static inline void print_error(char *tokens);
 
 /* ----------------- Main Function  ------------------ */
 int main()
 {
 	struct Data data;
+	int set;
 
 	while(1)
 	{
@@ -47,8 +63,8 @@ int main()
 		getchar();
 
     	split_input(&data);
-    	if (is_a_command(data.tokens[0]))
-    		execute_command(&data);
+    	if (set = is_a_command(data.tokens[0]))
+    		execute_command(&data, set);
     	else
     		print_error(data.tokens[0]);
     }
@@ -69,39 +85,22 @@ void split_input(struct Data *data )
 	data->arg_number = cnt-1;
 }
 
-bool is_a_command(char *command)
+int is_a_command(char *command)
 {
-	if (strcmp(command, "ls") == 0) 
-		return true;
-	else if (strcmp(command, "pwd") == 0) 
-		return true;
-	else if (strcmp(command, "cd") == 0) 
-		return true;
-	else if (strcmp(command, "mkdir") == 0) 
-		return true;
-	else if (strcmp(command, "rm") == 0) 
-		return true;
-	else if (strcmp(command, "nano") == 0) 
-		return true;
-	else if (strcmp(command, "cat") == 0) 
-		return true;
-	else if (strcmp(command, "exit") == 0) 
-		return true;
-	else if (strcmp(command, "vim") == 0 )
-		return true;
-	else if (strcmp(command, "gcc") == 0)
-		return true;
-	else 
-		return false;
+	for (int i=0; i<SET_BIN_LENGTH; ++i)
+		if (!strcmp(allowed_commands_set_bin[i], command))
+			return 1;
+	for (int i=0; i<SET_USR_LENGTH; ++i)
+		if (!strcmp(allowed_commands_set_usr[i], command))
+			return 2;
+	return 0;
 }
 
-void execute_command(struct Data *data)
+void execute_command(struct Data *data, int set)
 {
 	pid_t pid;
 	pid = fork ();
 	char path[100];
-	strcpy(path, "/bin/");
-	strcat(path, data->tokens[0]);
 
 	if (strcmp(data->tokens[0], "exit") == 0)
 			exit(1);
@@ -113,19 +112,34 @@ void execute_command(struct Data *data)
 		fprintf(stderr, "Fork Failed");
 	else if (pid == 0)
 	{
+		if (set==1)
+			strcpy(path, "/bin/");
+		else if (set==2)
+			strcpy(path, "/usr/bin/");
+		strcat(path, data->tokens[0]);
+		
 		switch (data->arg_number)
 		{
-				case 0:
-				printf("\t-path: %s, %s", path, data->tokens[0]);
+			case 0:
 				execlp(path, data->tokens[0], NULL);
 				break;
 			case 1:
-				printf("\t-path: %s, %s %s", path, data->tokens[0], data->tokens[1]);
 				execlp(path, data->tokens[0], data->tokens[1], NULL);
 				break;
 			case 2:
-				printf("\t-path: %s, %s %s %s", path, data->tokens[0], data->tokens[1], data->tokens[2]);
 				execlp(path, data->tokens[0], data->tokens[1], data->tokens[2], NULL);
+				break;
+			case 3:
+				execlp(path, data->tokens[0], data->tokens[1], data->tokens[2], data->tokens[3], NULL);
+				break;
+			case 4:
+				execlp(path, data->tokens[0], data->tokens[1], data->tokens[2], data->tokens[3], data->tokens[4], NULL);
+				break;
+			case 5:
+				execlp(path, data->tokens[0], data->tokens[1], data->tokens[2], data->tokens[3], data->tokens[4], data->tokens[5], NULL);
+				break;
+			case 6:
+				execlp(path, data->tokens[0], data->tokens[1], data->tokens[2], data->tokens[3], data->tokens[4], data->tokens[5], data->tokens[6], NULL);
 				break;
 			default:
 				break;
